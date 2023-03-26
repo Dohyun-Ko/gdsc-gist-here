@@ -2,7 +2,10 @@ package com.example.here
 
 import android.annotation.SuppressLint
 import androidx.annotation.StringRes
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.DataEvent
@@ -13,6 +16,9 @@ class ClientDataViewModel : ViewModel(), DataClient.OnDataChangedListener {
     private val _events = mutableStateListOf<Event>()
 
     val events: List<Event> = _events
+
+    var name by mutableStateOf<String?>(null)
+        private set
 
     @SuppressLint("VisibleForTests")
     override fun onDataChanged(dataEvents: DataEventBuffer) {
