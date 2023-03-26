@@ -1,9 +1,13 @@
 package com.example.here
 
+import android.Manifest
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -11,14 +15,13 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -28,6 +31,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat.startActivity
 import com.example.here.ui.theme.HereTheme
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.PutDataMapRequest
@@ -45,7 +50,7 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KSuspendFunction1
 
-class InitialActivity: ComponentActivity() {
+class InitialActivity : ComponentActivity() {
 
     private val dataClient by lazy {
         Wearable.getDataClient(this)
@@ -91,7 +96,8 @@ class NameSaver(private val dataClient: DataClient, private val context: Context
     suspend fun saveName(name: String) {
         try {
 
-            val sharedPreferences = context.getSharedPreferences("com.example.here", Context.MODE_PRIVATE)
+            val sharedPreferences =
+                context.getSharedPreferences("com.example.here", Context.MODE_PRIVATE)
 
             val editor = sharedPreferences.edit()
             editor.putString("name", name)
@@ -111,6 +117,7 @@ class NameSaver(private val dataClient: DataClient, private val context: Context
         }
     }
 }
+
 @Composable
 fun HomeScreen(saveName: KSuspendFunction1<String, Unit>) {
     var stage by remember { mutableStateOf(0 as Int) }
@@ -120,13 +127,35 @@ fun HomeScreen(saveName: KSuspendFunction1<String, Unit>) {
         stage++
     }
 
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .offset(x = 0.dp, y = 0.dp),
+//        horizontalAlignment = Alignment.CenterHorizontally,
+//        verticalArrangement = Arrangement.Center
+//    ) {
+//        Box(modifier = Modifier.size(600.dp).clip(CircleShape).background(Color(0xFFFFFFFF))) {
+//
+//        }
+//    }
+
     Box {
-        StageContent(stage = stage, name = name, onNameChange = { name = it }, onStageAdvance = { stage++ }, onStageRegress = { stage-- }, saveName=saveName)
+        StageContent(
+            stage = stage,
+            name = name,
+            onNameChange = { name = it },
+            onStageAdvance = { stage++ },
+            onStageRegress = { stage-- },
+            saveName = saveName
+        )
 
         if (stage == 4) {
-            RecordingScreen(advanceStage = { stage++ })
+            RecordingScreen(advanceStage = { stage++ }, name = name)
         }
     }
+
+
+
 }
 
 @Composable
@@ -138,6 +167,9 @@ fun StageContent(
     onStageRegress: () -> Unit,
     saveName: KSuspendFunction1<String, Unit>
 ) {
+    val context = LocalContext.current
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -151,6 +183,9 @@ fun StageContent(
                         }
                     }
                     3 -> onStageAdvance()
+                    5 -> {
+                        context.startActivity(Intent(context, AlertConfigureActivity::class.java))
+                    }
                     else -> {
                     }
                 }
@@ -164,9 +199,13 @@ fun StageContent(
         } else {
             TalkingText(stage, name)
         }
-        if (stage == 3) {
-            ConfirmationButtons(onConfirm = { runBlocking { launch { saveName(name) }.join() }; onStageAdvance() }, onCancel = onStageRegress)
-        }
+
+    }
+    if (stage == 3) {
+        ConfirmationButtons(
+            onConfirm = { runBlocking { launch { saveName(name) }.join() }; onStageAdvance() },
+            onCancel = onStageRegress
+        )
     }
 }
 
@@ -183,7 +222,12 @@ fun NameInput(name: String, onNameChange: (String) -> Unit) {
         decorationBox = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 it()
-                Box(modifier = Modifier.height(3.dp).width(270.dp).background(Color.White)) {}
+                Box(
+                    modifier = Modifier
+                        .height(3.dp)
+                        .width(270.dp)
+                        .background(Color.White)
+                ) {}
             }
         },
     )
@@ -191,19 +235,42 @@ fun NameInput(name: String, onNameChange: (String) -> Unit) {
 
 @Composable
 fun ConfirmationButtons(onConfirm: () -> Unit, onCancel: () -> Unit) {
-    Row {
-        Button(onClick = onConfirm) {
-            Text(text = "Yes")
-        }
+    Row(
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .padding(bottom = 37.dp)
+            .fillMaxSize()
+            .offset(x = 0.dp, y = 0.dp)
 
-        Button(onClick = onCancel) {
-            Text(text = "No")
+    ) {
+        Button(
+            onClick = onConfirm,
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF30D158)),
+            modifier = Modifier
+                .height(64.dp)
+                .width(158.dp)
+                .clip(shape = RoundedCornerShape(15.dp))
+        ) {
+            Text(text = "Yes", fontSize = 30.sp, fontWeight = FontWeight.W600)
+        }
+        Spacer(modifier = Modifier.width(13.dp))
+        Button(
+            onClick = onCancel,
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFFF453A)),
+            modifier = Modifier
+                .height(64.dp)
+                .width(158.dp)
+                .clip(shape = RoundedCornerShape(15.dp))
+
+        ) {
+            Text(text = "No", fontSize = 30.sp, fontWeight = FontWeight.W600)
         }
     }
 }
 
 @Composable
-fun RecordingScreen(advanceStage : () -> Unit) {
+fun RecordingScreen(advanceStage: () -> Unit, name: String) {
     var checked by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
@@ -211,7 +278,7 @@ fun RecordingScreen(advanceStage : () -> Unit) {
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
-            val response = sendRecording(context)
+            val response = sendRecording(context, name)
             Log.d("RecordingScreen", "Response: $response")
             checked = response != null
             if (checked) {
@@ -230,13 +297,16 @@ fun RecordingScreen(advanceStage : () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Image(painter = painterResource(R.drawable.check_green), contentDescription = "Green Check")
+            Image(
+                painter = painterResource(R.drawable.check_green),
+                contentDescription = "Green Check"
+            )
         }
     }
 }
 
 
-suspend fun sendRecording(context: Context): String? {
+suspend fun sendRecording(context: Context, name: String): String? {
     val fileName = "${context.externalCacheDir?.absolutePath}/audiorecordtest.mp4"
     val recorder = MediaRecorder(context).apply {
         setAudioSource(MediaRecorder.AudioSource.DEFAULT)
@@ -276,7 +346,7 @@ suspend fun sendRecording(context: Context): String? {
             .build()
 
         val request = Request.Builder()
-            .url("http://3.34.229.20:3000/audio")
+            .url("http://34.64.162.201/predict?keyword=$")
             .post(part)
             .build()
 
@@ -287,12 +357,12 @@ suspend fun sendRecording(context: Context): String? {
             Log.d("Recorder", "Success ${responseBodyString}")
             responseBodyString?.let {
                 val json = JSONObject(it)
-                val text = json.getString("text")
-                Log.d("Recorder", "Success $text")
-                if (text.contains("hello")) {
-                    text
+                val transcript = json.getString("transcript")
+                Log.d("Recorder", "Success $transcript")
+                if (transcript.contains(name)) {
+                    transcript
                 } else {
-                    text
+                    transcript
                 }
             }
         } else {
@@ -304,14 +374,32 @@ suspend fun sendRecording(context: Context): String? {
 
 @Composable
 fun ImageSection(stage: Int) {
-    Row {
+    Row(
+        modifier = Modifier
+            .padding(bottom = 20.dp)
+    ) {
         when (stage) {
-            0, 1, 2 -> Image(painter = painterResource(R.drawable.waving_hand)
-                , contentDescription = "Waving hand")
-            3 -> Image(painter = painterResource(R.drawable.grinning_face) , contentDescription = "Grinning face" )
-            4 -> Image(painter = painterResource(R.drawable.sound_graph) , contentDescription = "Sound Graph" )
-            5 -> Image(painter = painterResource(R.drawable.sunglasses_face), contentDescription = "Sunglasses face" )
-            else -> { }
+            0, 1, 2 -> Image(
+                painter = painterResource(R.drawable.waving_hand),
+                contentDescription = "Waving hand",
+                modifier = Modifier.size(120.dp)
+            )
+            3 -> Image(
+                painter = painterResource(R.drawable.grinning_face),
+                contentDescription = "Grinning face",
+                modifier = Modifier.size(120.dp)
+            )
+            4 -> Image(
+                painter = painterResource(R.drawable.sound_graph),
+                contentDescription = "Sound Graph",
+                modifier = Modifier.size(294.dp)
+            )
+            5 -> Image(
+                painter = painterResource(R.drawable.sunglasses_face),
+                contentDescription = "Sunglasses face",
+                modifier = Modifier.size(120.dp)
+            )
+            else -> {}
         }
     }
 }
@@ -329,7 +417,7 @@ fun getTextForStage(stage: Int, name: String): String {
         1 -> "Can you tell me your name?"
         2 -> ""
         3 -> "Is your name $name?"
-        4 -> "Call $name"
+        4 -> "Call '$name'"
         5 -> "Now you are all set"
         else -> ""
     }

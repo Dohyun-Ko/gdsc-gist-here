@@ -65,8 +65,7 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite:0.0.0-nightly-SNAPSHOT'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
-    implementation 'com.google.auth.oauth2.GoogleCredentials:0.26.0'
-    implementation 'com.google.cloud.speech:google-cloud-speech:1.26.0'
+    implementation 'com.arthenica:mobile-ffmpeg-full-gpl:4.4.LTS'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
