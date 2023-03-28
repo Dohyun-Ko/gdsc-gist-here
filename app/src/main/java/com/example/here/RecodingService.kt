@@ -278,7 +278,8 @@ class RecodingService: Service() {
                     val transcript = json.getString("transcript")
                     Log.d("Recorder", "Success $transcript")
                     if (transcript.contains(userName ?: "null")) {
-                        mNotificationManager.notify(nameNotificationId, mNotification.build())
+                        mNotificationManager.notify(nameNotificationId, mNotification
+                            .build())
                     }
                 }
             } else {

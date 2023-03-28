@@ -17,6 +17,9 @@ val PERMISSIONS = arrayOf(
     Manifest.permission.FOREGROUND_SERVICE,
     Manifest.permission.POST_NOTIFICATIONS
 )
+
+
+
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

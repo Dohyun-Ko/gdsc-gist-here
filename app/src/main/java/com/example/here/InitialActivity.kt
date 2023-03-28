@@ -346,7 +346,7 @@ suspend fun sendRecording(context: Context, name: String): String? {
             .build()
 
         val request = Request.Builder()
-            .url("http://34.64.162.201/predict?keyword=$")
+            .url("http://34.64.162.201/predict?keyword=$name")
             .post(part)
             .build()
 
