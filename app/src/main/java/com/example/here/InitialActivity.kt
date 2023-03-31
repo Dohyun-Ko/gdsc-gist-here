@@ -346,7 +346,7 @@ suspend fun sendRecording(context: Context, name: String): String? {
             .build()
 
         val request = Request.Builder()
-            .url("http://34.64.162.201/predict?keyword=$name")
+            .url("http://34.64.194.236/name/predict?keyword=$name")
             .post(part)
             .build()
 
@@ -367,7 +367,7 @@ suspend fun sendRecording(context: Context, name: String): String? {
             }
         } else {
             Log.d("Recorder", "Failed ${response.code}")
-            null
+            "skip"
         }
     }
 }

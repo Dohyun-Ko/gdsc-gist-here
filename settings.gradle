@@ -14,5 +14,3 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Here"
 include ':app'
-include ':here-wear'
-include ':Wear-Data'
