@@ -1,4 +1,4 @@
-package com.example.here.presentation.theme
+package com.gdsc_gist.here.presentation.theme
 
 import androidx.compose.runtime.Composable
 import androidx.wear.compose.material.MaterialTheme

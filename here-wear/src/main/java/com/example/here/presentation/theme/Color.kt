@@ -1,4 +1,4 @@
-package com.example.here.presentation.theme
+package com.gdsc_gist.here.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 import androidx.wear.compose.material.Colors

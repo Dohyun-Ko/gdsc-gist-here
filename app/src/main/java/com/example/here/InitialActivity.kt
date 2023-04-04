@@ -1,16 +1,12 @@
-package com.example.here
+package com.gdsc_gist.here
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,14 +27,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat.startActivity
-import com.example.here.ui.theme.HereTheme
-import com.google.android.gms.wearable.DataClient
-import com.google.android.gms.wearable.PutDataMapRequest
-import com.google.android.gms.wearable.Wearable
+import com.example.here.PermissionManager
+import com.gdsc_gist.here.ui.theme.HereTheme
 import kotlinx.coroutines.*
-import kotlinx.coroutines.tasks.await
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -50,23 +41,22 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KSuspendFunction1
 
+
 class InitialActivity : ComponentActivity() {
-
-    private val dataClient by lazy {
-        Wearable.getDataClient(this)
-    }
-
-    private val clientDataViewModel by viewModels<ClientDataViewModel>()
+    private lateinit var permissionManager: PermissionManager
 
     private val nameSaver by lazy {
-        NameSaver(dataClient, context = this)
+        NameSaver(context = this)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val sharedPreferences = getSharedPreferences("com.example.here", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("com.gdsc_gist.here", Context.MODE_PRIVATE)
         val name = sharedPreferences.getString("name", null)
+
+        permissionManager = PermissionManager(this)
+        permissionManager.checkPermissions()
 
         setContent {
             HereTheme {
@@ -83,33 +73,24 @@ class InitialActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        dataClient.addListener(clientDataViewModel)
     }
 
     override fun onPause() {
         super.onPause()
-        dataClient.removeListener(clientDataViewModel)
     }
 }
 
-class NameSaver(private val dataClient: DataClient, private val context: Context) {
+class NameSaver(private val context: Context) {
     suspend fun saveName(name: String) {
         try {
 
             val sharedPreferences =
-                context.getSharedPreferences("com.example.here", Context.MODE_PRIVATE)
+                context.getSharedPreferences("com.gdsc_gist.here", Context.MODE_PRIVATE)
 
             val editor = sharedPreferences.edit()
             editor.putString("name", name)
             editor.apply()
 
-            val request = PutDataMapRequest.create("/name").apply {
-                dataMap.putString("name", name)
-            }
-                .asPutDataRequest()
-                .setUrgent()
-
-            val result = dataClient.putDataItem(request).await()
         } catch (cancellationException: CancellationException) {
             Log.e("NameSaver", "Error saving name", cancellationException)
         } catch (exception: Exception) {
@@ -122,22 +103,6 @@ class NameSaver(private val dataClient: DataClient, private val context: Context
 fun HomeScreen(saveName: KSuspendFunction1<String, Unit>) {
     var stage by remember { mutableStateOf(0 as Int) }
     var name by remember { mutableStateOf("") }
-
-    fun advanceStage() {
-        stage++
-    }
-
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .offset(x = 0.dp, y = 0.dp),
-//        horizontalAlignment = Alignment.CenterHorizontally,
-//        verticalArrangement = Arrangement.Center
-//    ) {
-//        Box(modifier = Modifier.size(600.dp).clip(CircleShape).background(Color(0xFFFFFFFF))) {
-//
-//        }
-//    }
 
     Box {
         StageContent(
@@ -153,9 +118,6 @@ fun HomeScreen(saveName: KSuspendFunction1<String, Unit>) {
             RecordingScreen(advanceStage = { stage++ }, name = name)
         }
     }
-
-
-
 }
 
 @Composable
@@ -278,12 +240,14 @@ fun RecordingScreen(advanceStage: () -> Unit, name: String) {
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
-            val response = sendRecording(context, name)
-            Log.d("RecordingScreen", "Response: $response")
-            checked = response != null
-            if (checked) {
-                delay(1000)
-                advanceStage()
+            while (true) {
+                val response = sendRecording(context, name)
+                Log.d("RecordingScreen", "Response: $response")
+                checked = response != null
+                if (checked) {
+                    delay(1000)
+                    advanceStage()
+                }
             }
         }
     }
@@ -346,7 +310,7 @@ suspend fun sendRecording(context: Context, name: String): String? {
             .build()
 
         val request = Request.Builder()
-            .url("http://34.64.194.236/name/predict?keyword=$name")
+            .url("http://here.jaehong21.com/name/predict?keyword=$name")
             .post(part)
             .build()
 

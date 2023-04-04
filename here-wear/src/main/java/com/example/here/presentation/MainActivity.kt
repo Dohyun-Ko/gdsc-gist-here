@@ -4,7 +4,7 @@
  * changes to the libraries and their usages.
  */
 
-package com.example.here.presentation
+package com.gdsc_gist.here.presentation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -23,8 +23,8 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
-import com.example.here.R
-import com.example.here.presentation.theme.HereTheme
+import com.gdsc_gist.here.R
+import com.gdsc_gist.here.presentation.theme.HereTheme
 import com.google.android.gms.wearable.*
 
 private const val NAME_KEY = "com.example.key.name"

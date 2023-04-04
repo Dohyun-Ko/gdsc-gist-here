@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.here'
+    namespace 'com.gdsc_gist.here'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.here"
+        applicationId "com.gdsc_gist.here"
         minSdk 30
         targetSdk 33
         versionCode 1

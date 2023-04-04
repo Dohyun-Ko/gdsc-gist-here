@@ -1,4 +1,4 @@
-package com.example.here.presentation
+package com.gdsc_gist.here.presentation
 
 import android.annotation.SuppressLint
 import android.app.Application
@@ -11,7 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.here.R
+import com.gdsc_gist.here.R
 import com.google.android.gms.wearable.Asset
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.CapabilityInfo

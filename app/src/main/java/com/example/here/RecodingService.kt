@@ -1,4 +1,4 @@
-package com.example.here
+package com.gdsc_gist.here
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -17,10 +17,10 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.example.here.PermissionManager
 import kotlinx.coroutines.*
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import org.checkerframework.checker.units.qual.Current
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
@@ -68,7 +68,7 @@ class RecodingService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        val sharedPreferences = getSharedPreferences("com.example.here", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("com.gdsc_gist.here", Context.MODE_PRIVATE)
         val name = sharedPreferences.getString("name", null)
         userName = name
 
@@ -86,33 +86,14 @@ class RecodingService : Service() {
                 PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
             }
 
-        val pauseIntent = Intent(this, PausedService::class.java).also { intent ->
-            Log.d("here", "pause intent")
-            applicationContext.stopService(Intent(applicationContext, RecodingService::class.java))
-            applicationContext.startForegroundService(intent)
-        }
-
-        val pausePendingIntent: PendingIntent = PendingIntent.getBroadcast(
-            this,
-            0,
-            pauseIntent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val pauseAction = NotificationCompat.Action.Builder(
-            R.drawable.waving_hand, // Your pause action icon
-            "Pause",
-            pausePendingIntent
-        ).build()
-
         val notification =
             NotificationCompat.Builder(this, channelId).setContentTitle("Here")
                 .setContentText("Recognizing...").setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent).setTicker("ticker")
-                .addAction(pauseAction)
                 .build()
 
         startForeground(notificationId, notification)
+
 
         mNotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         mNotification = Notification.Builder(this, channelId).setContentTitle("Here")
@@ -182,7 +163,7 @@ class RecodingService : Service() {
             .addFormDataPart("file", file.name, requestFile).build()
 
         val nameRequest =
-            Request.Builder().url("http://34.64.194.236/name/predict?keyword=$userName").post(part)
+            Request.Builder().url("http://here.jaehong21.com/name/predict?keyword=$userName").post(part)
                 .build()
         client.newCall(nameRequest).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -200,13 +181,7 @@ class RecodingService : Service() {
                         if (transcript.contains(userName ?: "null")) {
                             mNotificationManager.notify(
                                 nameNotificationId, mNotification
-                                    .setSmallIcon(R.drawable.ic_launcher_foreground)
-                                    .setLargeIcon(
-                                        BitmapFactory.decodeResource(
-                                            this@RecodingService.resources,
-                                            R.drawable.hearing
-                                        )
-                                    )
+                                    .setSmallIcon(R.drawable.waving_hand)
                                     .build()
                             )
                         }
@@ -218,7 +193,7 @@ class RecodingService : Service() {
         })
 
         val soundRequest =
-            Request.Builder().url("http://34.64.194.236/alert/predict").post(part).build()
+            Request.Builder().url("http://here.jaehong21.com/alert/predict").post(part).build()
 
         client.newCall(soundRequest).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -236,7 +211,11 @@ class RecodingService : Service() {
                         val category = firstObject.getJSONArray("categories").getJSONObject(0)
                         Log.d("Recorder", "Success $category")
                         val index = category.getString("index").toInt()
+                        val score = category.getString("score").toFloat()
                         Log.d("Recorder", "Success $index")
+                        if (score < 0.7) {
+                            return
+                        }
                         if (lastIndex == index) {
                             if (index in 1..7) {
                                 mNotificationManager.notify(

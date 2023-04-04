@@ -1,4 +1,4 @@
-package com.example.here.ui.theme
+package com.gdsc_gist.here.ui.theme
 
 import androidx.compose.material.Typography
 import androidx.compose.ui.text.TextStyle

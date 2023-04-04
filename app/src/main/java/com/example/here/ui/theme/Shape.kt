@@ -1,4 +1,4 @@
-package com.example.here.ui.theme
+package com.gdsc_gist.here.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Shapes

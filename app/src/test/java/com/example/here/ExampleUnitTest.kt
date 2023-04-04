@@ -1,4 +1,4 @@
-package com.example.here
+package com.gdsc_gist.here
 
 import org.junit.Test
 
